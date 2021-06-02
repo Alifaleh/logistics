@@ -28,6 +28,7 @@
         'views/views.xml',
         'views/templates.xml',
         'views/logistics_view.xml',
+        'data/sequence_data.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

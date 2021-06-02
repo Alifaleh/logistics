@@ -16,10 +16,11 @@ def test(var):
 class LogisticsShipment(models.Model):
     _name = 'logistics.shipment'
     _description = 'logistics.shipment'
+    _rec_name = "name_seq"
 
     _status = [('draft', 'draft'), ('in_progress', 'In Progress'), ('accepted', 'Accepted'), ('canceled', 'Canceled')]
 
-
+    name_seq = fields.Char(string="id", required = True, copy=False, readonly=True, index=True, default=lambda self: self.env['ir.sequence'].next_by_code('logistics.shipment.code'))
     status = fields.Selection(_status, default='draft')
     contract_id = fields.Many2one('contract.contract',string='Contract')
     origin_ids = fields.Many2many('purchase.order', string="Origin",relation="shipment_purchase",column1="col1",column2="col2")
@@ -88,17 +89,28 @@ class LogisticsShipmentPurchaseOrders(models.Model):
     shipment_id = fields.Many2one('logistics.shipment')
 
     purchase_orders_ids = fields.Many2one('purchase.order',string='Purchase Order')
-    type_ids = fields.Many2many('logistics.shipment.transtypes')
-    from_date = fields.Date()
-    to_date = fields.Date()
-    amount = fields.Float()
+    type_id = fields.Many2one('logistics.shipment.transtypes', string='type')
+    is_transport = fields.Boolean(string="Is Transport", related="type_id.is_transport")
+    from_id = fields.Many2one('res.country.state')
+    to_id = fields.Many2one('res.country.state')
+    amount = fields.Float(string="Total Amount")
+
+    @api.onchange("purchase_orders_ids")
+    def get_po_total_amount(self):
+        self.amount = self.purchase_orders_ids.amount_total
 
 
 
 class LogisticsShipmentTransTypes(models.Model):
     _name = 'logistics.shipment.transtypes'
     _description = 'logistics.shipment.transtypes'
+    _rec_name = "name"
 
     name = fields.Char(string="Name")    
     is_transport = fields.Boolean(string="Is Transport")
 
+
+
+class PurchaseOrderExpence(models.Model):
+    _inherit="purchase.order"
+    is_shipment_expence = fields.Boolean(string="Is Shipment Expense", default=False)
