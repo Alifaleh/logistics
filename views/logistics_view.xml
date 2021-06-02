@@ -28,23 +28,31 @@
             <field name="arch" type="xml">
                 <form string="">
                     <header>
+                        <button name="action_confirm" type="object" string="Confirm" class="oe_highlight" attrs="{'invisible': [('status', '!=', 'draft')]}"/>
+                        <button name="action_done" type="object" string="Done" class="oe_highlight" attrs="{'invisible': [('status', '!=', 'active')]}"/>
+                        <button name="action_reset" type="object" string="Reset" class="oe_highlight" attrs="{'invisible': [('status', '=', 'draft')]}"/>
+
+                        <field name="status" widget="statusbar" statusbar_visible="draft,active,done"/>
                     </header>
                     <sheet>
+                        <group style="font-size:50px;">
+                            <field name="name_seq" nolabel="1" readonly="1"/>
+                        </group>
 
                         <group>
 
                             <group>
-                                <field name="name_seq" invisible="1"/>
-                                <field name="contract_id" required="1"/>
-                                <field name="origin_ids" widget="many2many_tags" required="1"/>
-                                <field name="origin_is_selected" invisible="1"/>
-                                <field name="customer" required="1"/>     
+                                <field name="contract_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="origin_ids" widget="many2many_tags" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="origin_is_selected" invisible="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="customer" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>     
                             </group>
 
                             <group>
-                                <field name="vendor" attrs="{'invisible': [('multi_vendor', '=', True)]}"/>
-                                <field name="multi_vendor"/>
-                                <field name="tags_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}"/>
+                                <field name="vendor" attrs="{'invisible': [('multi_vendor', '=', True)],'readonly': [('status', '!=', 'draft')]}" required="1"/>
+                                <field name="multi_vendor" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="tags_ids" widget="many2many_tags" options="{'color_field': 'color', 'no_create_edit': True}" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="ratio" readonly="1"/>
                             </group>
 
                         </group>
@@ -59,10 +67,10 @@
                         <notebook>
                             <page name='shipment' string='Shipment'>
                                 <group>
-                                    <field name="shipment_lines">
+                                    <field name="shipment_lines" attrs="{'readonly': [('status', '=', 'done')]}">
                                         <tree editable="top">
                                             <field name="product_id" width="200px"/>
-                                            <field name="vendors" attrs="{'column_invisible': [('parent.multi_vendor', '=', False)]}" width="200px"/>
+                                            <field name="vendors" attrs="{'column_invisible': [('parent.multi_vendor', '=', False)]}" width="200px" required="1"/>
                                             <field name="qty" width="200px"/>
                                             <field name="unit_price" width="200px" invisible="1"/>
                                             <field name="amount_total" width="200px"/>
@@ -79,7 +87,7 @@
 
                             <page name='purchase_order' string='Purchase Orders'>
                                 <group>
-                                    <field name="purchase_orders">
+                                    <field name="purchase_orders" attrs="{'readonly': [('status', '=', 'done')]}">
                                         <tree editable="top">
                                             <field name="purchase_orders_ids" width="200px" options='{"create_edit":False,"no_open":True}' context="{'default_is_shipment_expence':True}" domain="[('is_shipment_expence', '=', True)]"/>
                                             <field name="type_id" width="200px"/>
@@ -90,6 +98,13 @@
                                         </tree>
                                     </field>
                                 </group>
+                                <group>
+                                    <group>
+                                    </group>
+                                    <group>
+                                        <field name="total_po" readonly="1"/>
+                                    </group>
+                                </group>
                             </page>
 
                         </notebook>
@@ -98,6 +113,11 @@
 
                         
                     </sheet>
+
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>

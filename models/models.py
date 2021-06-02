@@ -7,7 +7,7 @@ from odoo.exceptions import UserError
 
 def test(var):
     test_file = open("/usr/lib/python3/dist-packages/odoo/c-addons/test_file.txt","a")
-    test_file.write(var)
+    test_file.write(str(var)+"\n")
     test_file.close()
 
 
@@ -16,12 +16,13 @@ def test(var):
 class LogisticsShipment(models.Model):
     _name = 'logistics.shipment'
     _description = 'logistics.shipment'
+    _inherit = ['mail.thread']
     _rec_name = "name_seq"
 
-    _status = [('draft', 'draft'), ('in_progress', 'In Progress'), ('accepted', 'Accepted'), ('canceled', 'Canceled')]
+    _status = [('draft', 'Draft'), ('active', 'Active'), ('done', 'Done')]
 
-    name_seq = fields.Char(string="id", required = True, copy=False, readonly=True, index=True, default=lambda self: self.env['ir.sequence'].next_by_code('logistics.shipment.code'))
     status = fields.Selection(_status, default='draft')
+    name_seq = fields.Char(string="id", required = True, copy=False, readonly=True, index=True, default=lambda self: self.env['ir.sequence'].next_by_code('logistics.shipment.code'))
     contract_id = fields.Many2one('contract.contract',string='Contract')
     origin_ids = fields.Many2many('purchase.order', string="Origin",relation="shipment_purchase",column1="col1",column2="col2")
     origin_is_selected = fields.Boolean(default=False)
@@ -31,8 +32,38 @@ class LogisticsShipment(models.Model):
     tags_ids = fields.Many2many('logistics.shipment.tags',string="Tags")
     shipment_total = fields.Float(compute="_compute_shipment_total",string='Shipment Total')
     shipment_lines = fields.One2many('logistics.shipment.line', 'shipment_id', string='Shipment Products')
-
     purchase_orders = fields.One2many('logistics.shipment.pos', 'shipment_id', string="Purchase Orders")
+    total_po = fields.Float(string="Total")
+    ratio = fields.Float(string="Ratio")
+
+
+    def action_confirm(self):
+        self.status = "active"
+
+    def action_done(self):
+        self.status = "done"
+
+    def action_reset(self):
+        self.status = "draft"
+
+
+    @api.onchange("shipment_lines","purchase_orders")
+    def calculate_ratio(self):
+        if self.total_po>0 and self.shipment_total>0:
+            self.ratio = self.total_po/self.shipment_total
+        else:
+            self.ratio = 0
+
+
+
+    @api.onchange("purchase_orders")
+    def get_total_po(self):
+        total = 0
+        for po in self.purchase_orders:
+            test(po.amount)
+            total += po.amount
+        self.total_po = total
+
 
 
 
@@ -52,6 +83,7 @@ class LogisticsShipment(models.Model):
             self.origin_is_selected=False
 
     def get_from_pos(self):
+        self.write({"shipment_lines":[(5)]})
         for po in self.origin_ids:
             for line in po.order_line:
                 self.shipment_lines.create({"shipment_id":self.id,'product_id':line.product_id.id,'qty':line.product_qty, "unit_price":line.price_unit,"amount_total":line.price_unit*line.product_qty})
@@ -95,9 +127,11 @@ class LogisticsShipmentPurchaseOrders(models.Model):
     to_id = fields.Many2one('res.country.state')
     amount = fields.Float(string="Total Amount")
 
+
     @api.onchange("purchase_orders_ids")
     def get_po_total_amount(self):
         self.amount = self.purchase_orders_ids.amount_total
+
 
 
 
