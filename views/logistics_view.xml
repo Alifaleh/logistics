@@ -4,7 +4,7 @@
 
         <record id="logistics_types_form" model="ir.ui.view">
             <field name="name">logistics_types.form</field>
-            <field name="model">logistics.shipment.transypes</field>
+            <field name="model">logistics.shipment.transtypes</field>
             <field name="arch" type="xml">
                 <form string="">
                     <header>
@@ -81,7 +81,7 @@
                                     <field name="purchase_orders">
                                         <tree editable="top">
                                             <field name="purchase_orders_ids"/>
-                                            <field name="type_id"/>
+                                            <field name="type_ids"/>
                                             <field name="from_date"/>
                                             <field name="to_date"/>
                                             <field name="amount"/>
