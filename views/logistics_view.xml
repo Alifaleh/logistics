@@ -108,12 +108,9 @@
             <field name="model">purchase.order</field>
             <field name="inherit_id" ref="purchase.purchase_order_form"/>
             <field name="arch" type="xml">            
-                <!-- <field name="partner_id" position="after">
-                    <field name="is_shipment_expence"/>
-                </field> -->
-                <xpath expr="//sheet//field[@name='partner_id']" position="after">
+                <field name="partner_id" position="after">
                     <field name="is_shipment_expence" invisible="1"/>
-                </xpath>
+                </field>
             </field>
         </record>
 
